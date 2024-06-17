@@ -8,6 +8,9 @@ import Role from '../../../models/role';
 import { RoleDataService } from '../../../services/role-data.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { RoleFilter } from '../../../models/roleFilter';
+import Location from '../../../models/Location';
+import Department from '../../../models/Departments';
 
 @Component({
   selector: 'app-option-filter',
@@ -17,76 +20,43 @@ import { Router, RouterLink } from '@angular/router';
   styleUrls: ['./option-filter.component.css'], // Ensure this is plural: styleUrls
 })
 export class OptionFilterComponent implements OnInit {
-
   selectedEmployeeFilter: EmployeeFilter = new EmployeeFilter([], [], [], []);
-  displayData: Employee[] = [];
+  selectedRoleFilter: RoleFilter = new RoleFilter([], []);
+
+  employeesToDisplay: Employee[] = [];
+  rolesToDisplay: Role[] = [];
+
   rolesData: Role[] = [];
-  locations: string[] = [];
-  departments:string[] = [];
+  locations: Location[] = [];
+  departments: Department[] = [];
 
   constructor(
-    private displayDataService: DisplayDataService, 
-    private selectedFilterService: SelectedFiltersService, 
-    private filterService: FilterService, 
+    private displayDataService: DisplayDataService,
+    private selectedFilterService: SelectedFiltersService,
+    private filterService: FilterService,
     private roleDataService: RoleDataService,
-    private route: Router,
+    private route: Router
   ) {}
 
   ngOnInit() {
-    this.selectedFilterService.selectedFilterList.subscribe(data => this.selectedEmployeeFilter = data);
-    this.displayDataService.employeeDisplayDataObserver.subscribe(data => this.displayData = data);
-    this.roleDataService.roles$.subscribe(data => {
+    this.selectedFilterService.selectedEmployeeFilterList.subscribe(
+      (data) => (this.selectedEmployeeFilter = data)
+    );
+    this.displayDataService.employeeDisplayDataObserver.subscribe(
+      (data) => (this.employeesToDisplay = data)
+    );
+    this.displayDataService.roleDisplayDataObserver.subscribe(
+      (data) => (this.rolesToDisplay = data)
+    );
+    this.roleDataService.roles$.subscribe((data) => {
       this.rolesData = data;
-      this.locations = this.getLocations(this.rolesData);
-      this.departments = this.getDepartments(this.rolesData);
+      this.roleDataService.location$.subscribe(data=> this.locations=data);
+      this.roleDataService.departments$.subscribe(data=> this.departments=data);
+
     });
   }
 
-  isRolesPage(){
-    return this.route.url.includes('roles');
-  }
-
-  getLocations(rolesData: Role[]): string[] {
-    return [...new Set(rolesData.map(role => role.location))];
-  }
-  getDepartments(rolesData: Role[]): string[] {
-    return [...new Set(rolesData.map(role => role.department))];
-  }
-
-  manageEmployeeFilter(event:Event) {
-    let element = event.target as HTMLDivElement;
-    let criteria: string = element.classList[1];
-    this.selectedEmployeeFilter = this.filterService.manageSelectedFilterOptions(
-      element,
-      this.selectedEmployeeFilter,
-      criteria
-    ) as EmployeeFilter;
-    element.classList.toggle("active");
-
-    if (criteria == "selectedAlphabets") {
-      let removeFilterBtn = document.querySelector(
-        ".remove-filter-btn"
-      ) as HTMLImageElement;
-      removeFilterBtn.src = "../../assets/interface/filter_red.svg";
-      this.displayData = this.filterService.applyFilter(
-        this.selectedEmployeeFilter,
-        this.displayData
-      );
-
-      this.displayDataService.set(this.displayData);
-    } else {
-      this.filterService.toggleFilterApplyButtons(this.selectedEmployeeFilter);
-    }
-  }
-
-  // Show filter Dropdowns
-  showFilterDropdown(currFilterOption: HTMLDivElement) {
-    currFilterOption.nextElementSibling!.classList.toggle('active');
-    const dropDownBtnIcon = currFilterOption.children[0].children[1];
-    dropDownBtnIcon.classList.toggle('active');
-    this.toggleFilterApplyButtons(this.selectedEmployeeFilter);
-  }
-
+  
   toggleFilterApplyButtons(selectedFilter: any) {
     let isOptionFilterApplied = false;
     Object.keys(selectedFilter).forEach((type) => {
@@ -111,13 +81,90 @@ export class OptionFilterComponent implements OnInit {
     }
   }
 
+  // Show filter Dropdowns
+  showFilterDropdown(currFilterOption: HTMLDivElement) {
+    currFilterOption.nextElementSibling!.classList.toggle('active');
+    const dropDownBtnIcon = currFilterOption.children[0].children[1];
+    dropDownBtnIcon.classList.toggle('active');
+    if (this.isRolesPage()) {
+      this.toggleFilterApplyButtons(this.selectedRoleFilter);
+    } else {
+      this.toggleFilterApplyButtons(this.selectedEmployeeFilter);
+    }
+  }
+
   manageApplyFilterBtn() {
-    this.displayData = this.filterService.applyFilter(this.selectedEmployeeFilter, this.displayData);
-    this.displayDataService.set(this.displayData);
+    if(this.isRolesPage()){
+      this.rolesToDisplay = this.filterService.applyFilter(this.selectedRoleFilter,this.rolesToDisplay);
+      this.displayDataService.setRoles(this.rolesToDisplay);
+    }else{
+      this.employeesToDisplay = this.filterService.applyFilter(
+        this.selectedEmployeeFilter,
+        this.employeesToDisplay
+      );
+      this.displayDataService.set(this.employeesToDisplay);
+    }
+
   }
 
   manageResetFilterBtn() {
-    this.displayData = this.filterService.resetFilter(this.selectedEmployeeFilter, this.displayData);
-    this.displayDataService.set(this.displayData);
+    if(!this.isRolesPage()){
+      this.employeesToDisplay = this.filterService.resetFilter(
+        this.selectedEmployeeFilter,
+        this.employeesToDisplay
+      );
+      this.displayDataService.set(this.employeesToDisplay);
+    }
+    else{
+      this.rolesToDisplay = this.filterService.resetFilter(this.selectedRoleFilter, this.rolesToDisplay);
+      this.displayDataService.setRoles(this.rolesToDisplay);
+    }
+  }
+
+  //Employee
+  manageEmployeeFilter(event: Event) {
+    let element = event.target as HTMLDivElement;
+    let criteria: string = element.classList[1];
+    this.selectedEmployeeFilter =
+      this.filterService.manageSelectedFilterOptions(
+        element,
+        this.selectedEmployeeFilter,
+        criteria
+      ) as EmployeeFilter;
+    element.classList.toggle('active');
+
+    if (criteria == 'selectedAlphabets') {
+      let removeFilterBtn = document.querySelector(
+        '.remove-filter-btn'
+      ) as HTMLImageElement;
+      removeFilterBtn.src = '../../assets/interface/filter_red.svg';
+      this.employeesToDisplay = this.filterService.applyFilter(
+        this.selectedEmployeeFilter,
+        this.employeesToDisplay
+      );
+
+      this.displayDataService.set(this.employeesToDisplay);
+    } else {
+      this.filterService.toggleFilterApplyButtons(this.selectedEmployeeFilter);
+    }
+  }
+
+  //Roles Filter
+  isRolesPage() {
+    return this.route.url.includes('roles');
+  }
+
+  manageRoleFilter(e:Event) {
+    let element = e.target as HTMLDivElement;
+    let criteria: string = element.classList[1];
+
+    this.selectedRoleFilter = this.filterService.manageSelectedFilterOptions(
+      element,
+      this.selectedRoleFilter,
+      criteria
+    );
+    element.classList.toggle('active');
+
+    this.toggleFilterApplyButtons(this.selectedRoleFilter);
   }
 }

@@ -1,4 +1,3 @@
-
   <!-- Roles Header -->
   <div class="page-header">
     <div class="page-header-content">
@@ -63,9 +62,9 @@
             <p>{{ employee.location }}</p>
           </div>
         </div>
-
+        
         <div class="roles-card-bottom flex">
-          <!-- <button (click)="viewEmployee(employee.id)">View</button> -->
+          <button [routerLink]="['/addEmployee',employee.id]">View</button>
           <img src="assets/right-arrow-icon.svg" alt="" />
         </div>
       </div>

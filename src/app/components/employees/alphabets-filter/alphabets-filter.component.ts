@@ -24,7 +24,7 @@ export class AlphabetsFilterComponent {
   }
   ngOnInit() {
     this.generateAlphabets();
-    this.selectedFilterService.selectedFilterList.subscribe( data=> this.selectedEmployeeFilter=data);
+    this.selectedFilterService.selectedEmployeeFilterList.subscribe( data=> this.selectedEmployeeFilter=data);
     this.displayDataService.employeeDisplayDataObserver.subscribe(data => this.displayData=data);
   }
 
@@ -32,10 +32,6 @@ export class AlphabetsFilterComponent {
     for (let i = 1; i <= 26; i++) {
       this.alphabets.push(String.fromCharCode(64 + i));
     }
-  }
-
-  manageResetAlphabetFilter() {
-    
   }
 
   manageEmployeeFilter(event:Event) {
@@ -52,7 +48,7 @@ export class AlphabetsFilterComponent {
       let removeFilterBtn = document.querySelector(
         ".remove-filter-btn"
       ) as HTMLImageElement;
-      removeFilterBtn.src = "../../assets/interface/filter_red.svg";
+      removeFilterBtn.src = "assets/interface/filter_red.svg";
       this.displayData = this.filterService.applyFilter(
         this.selectedEmployeeFilter,
         this.displayData
@@ -62,5 +58,14 @@ export class AlphabetsFilterComponent {
     } else {
       this.filterService.toggleFilterApplyButtons(this.selectedEmployeeFilter);
     }
+  }
+
+  manageResetAlphabetFilter() {
+    this.displayData = this.filterService.resetAlphabetFilter(
+      this.selectedEmployeeFilter,
+      this.displayData
+    );
+
+    this.displayDataService.set(this.displayData);
   }
 }

@@ -27,25 +27,23 @@
       <div class="dropdown">
         <div *ngFor="let loc of locations;"
           class="drop-down-menu location"
-          (click)="manageEmployeeFilter($event)"
-        >{{loc}}</div>
+          (click)="isRolesPage() ? manageRoleFilter($event) : manageEmployeeFilter($event)"
+        >{{loc.name}}</div>
       </div>
     </div>
-
+    
     <div class="filter-option-container">
-      <div #departement class="placeholder" (click)="showFilterDropdown(departement)">
+      <div #department class="placeholder" (click)="showFilterDropdown(department)">
         <div class="filter-options-btn">
           <p class="department">Department</p>
           <i class="fa-solid fa-angle-down"></i>
         </div>
       </div>
       <div class="dropdown">
-        
         <div *ngFor="let departement of departments"
           class="drop-down-menu department"
-          (click)="manageEmployeeFilter($event)"
-        >{{departement}}</div>
-        
+          (click)="isRolesPage() ? manageRoleFilter($event) : manageEmployeeFilter($event)"
+        >{{departement.name}}</div>
       </div>
     </div>
   </div>

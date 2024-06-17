@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RoleDataService } from '../../../services/role-data.service';
 import Role from '../../../models/role';
 import { EmployeeDataService } from '../../../services/employee-data-service';
@@ -9,7 +9,7 @@ import Employee from '../../../models/employee';
 @Component({
   selector: 'app-role-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './role-details.component.html',
   styleUrls: ['./role-details.component.css']
 })

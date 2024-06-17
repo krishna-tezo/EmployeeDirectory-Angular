@@ -14,6 +14,7 @@ export default class Employee {
   public projectName: string;
   public status: string;
   public roleId: string;
+
   constructor(
     id: string,
     empProfilePic: string,

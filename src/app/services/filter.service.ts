@@ -3,15 +3,20 @@ import Employee from '../models/employee';
 import Role from '../models/role';
 import { EmployeeFilter } from '../models/employeeFilter';
 import { EmployeeDataService } from './employee-data-service';
+import { RoleDataService } from './role-data.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FilterService {
-  data: Employee[] = [];
-  constructor(private employeeService: EmployeeDataService) {
-    employeeService.employees$.subscribe((data) => (this.data = data));
+  employeeData: Employee[] = [];
+  rolesData: Role[] = [];
+  constructor(private employeeService: EmployeeDataService, private roleDataService: RoleDataService) {
+    employeeService.employees$.subscribe((data) => (this.employeeData = data));
+    roleDataService.roles$.subscribe(data => this.rolesData = data);
   }
+  
+  
   manageSelectedFilterOptions(
     element: HTMLDivElement,
     selectedFilter: any,
@@ -30,6 +35,31 @@ export class FilterService {
       );
     }
     return selectedFilter;
+  }
+
+  // Toggle Filter Apply buttons
+  toggleFilterApplyButtons(selectedFilter: any) {
+    let isOptionFilterApplied = false;
+    Object.keys(selectedFilter).forEach((type) => {
+      if (
+        type != 'selectedAlphabets' &&
+        selectedFilter[type as keyof EmployeeFilter].length > 0
+      ) {
+        isOptionFilterApplied = true;
+      }
+    });
+    const btnReset = document.querySelector(
+      '.filter-options-reset'
+    ) as HTMLButtonElement;
+    const btnApply = document.querySelector(
+      '.filter-options-apply'
+    ) as HTMLButtonElement;
+    let show = 'inline-block';
+    let hide = 'none';
+    if (isOptionFilterApplied) {
+      btnReset.style.display = show;
+      btnApply.style.display = show;
+    }
   }
 
   //Employe Filter
@@ -73,6 +103,7 @@ export class FilterService {
     return displayData;
   }
 
+  //Remove Filtered Roles
   removeUnfilteredRoles(
     displayData: Role[],
     type: String,
@@ -114,7 +145,13 @@ export class FilterService {
     let filterLabels = Array.from(
       document.querySelectorAll('.filter-options-btn p')
     );
-    displayData = this.data.slice();
+    if(Object.keys(selectedFilter).length==4){
+      displayData = this.employeeData.slice();
+
+    }
+    else{
+      displayData = this.rolesData.slice();
+    }
     type selectedFilterType = keyof typeof selectedFilter;
 
     Object.keys(selectedFilter).forEach((type) => {
@@ -145,31 +182,6 @@ export class FilterService {
       }
     });
     return displayData;
-  }
-
-  // Toggle Filter Apply buttons
-  toggleFilterApplyButtons(selectedFilter: any) {
-    let isOptionFilterApplied = false;
-    Object.keys(selectedFilter).forEach((type) => {
-      if (
-        type != 'selectedAlphabets' &&
-        selectedFilter[type as keyof EmployeeFilter].length > 0
-      ) {
-        isOptionFilterApplied = true;
-      }
-    });
-    const btnReset = document.querySelector(
-      '.filter-options-reset'
-    ) as HTMLButtonElement;
-    const btnApply = document.querySelector(
-      '.filter-options-apply'
-    ) as HTMLButtonElement;
-    let show = 'inline-block';
-    let hide = 'none';
-    if (isOptionFilterApplied) {
-      btnReset.style.display = show;
-      btnApply.style.display = show;
-    }
   }
 
   // Reset Option Filter
@@ -215,4 +227,28 @@ export class FilterService {
 
     return displayData;
   }
+  resetAlphabetFilter(
+    selectedFilter: EmployeeFilter,
+    displayData: Employee[]
+  ) {
+    const resetFilterBtn = document.querySelector(
+      '.remove-filter-btn'
+    ) as HTMLImageElement;
+
+    if (selectedFilter.selectedAlphabets.length > 0) {
+      selectedFilter.selectedAlphabets = [];
+    }
+
+    const alphabetDivs = Array.from(
+      document.querySelectorAll('.filter-alphabets div')
+    );
+    for (let element of alphabetDivs) {
+      element.classList.remove('active');
+    }
+
+    resetFilterBtn.src = 'assets/interface/filter.svg';
+    displayData = this.applyFilter(selectedFilter, this.employeeData);
+    return displayData;
+  }
 }
+

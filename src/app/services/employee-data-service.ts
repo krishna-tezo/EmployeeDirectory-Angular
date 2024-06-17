@@ -12,4 +12,8 @@ export class EmployeeDataService {
   constructor(private http: HttpClient) {
     this.employees$ = this.http.get<Employee[]>('https://localhost:7216/Employee/GetEmployees');
   }
+
+  employee(id: string): Observable<Employee> {
+    return this.http.get<Employee>(`https://localhost:7216/Employee/GetEmployee/${id}`);
+  }
 }
